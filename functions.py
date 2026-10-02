@@ -18,12 +18,8 @@ import csv
 import io
 from models import StudyTask
 
-# ------------------------------------------------------------------ #
-#  Constants                                                           #
-# ------------------------------------------------------------------ #
-
-DATA_FILE     = "data.json"      # main data file
-SETTINGS_FILE = "settings.json"  # app settings file
+# ---- Per-user data directory ---- #
+USER_DATA_DIR = "userdata"   # folder that holds one data/settings file per user
 
 # Default settings values
 DEFAULT_SETTINGS: dict = {
@@ -42,19 +38,37 @@ DEFAULT_SETTINGS: dict = {
 #  Data Persistence — Main Data                                        #
 # ================================================================== #
 
-def load_data() -> tuple:
+def _data_path(username: str) -> str:
+    """Return the path to a user's data JSON file."""
+    os.makedirs(USER_DATA_DIR, exist_ok=True)
+    safe = username.lower().replace(" ", "_")
+    return os.path.join(USER_DATA_DIR, f"{safe}_data.json")
+
+
+def _settings_path(username: str) -> str:
+    """Return the path to a user's settings JSON file."""
+    os.makedirs(USER_DATA_DIR, exist_ok=True)
+    safe = username.lower().replace(" ", "_")
+    return os.path.join(USER_DATA_DIR, f"{safe}_settings.json")
+
+
+def load_data(username: str) -> tuple:
     """
-    Load subjects and tasks from the JSON data file.
+    Load subjects and tasks from the user's JSON data file.
+
+    Args:
+        username (str): The logged-in user's username.
 
     Returns:
         subjects (list[str])      : List of subject names.
         tasks    (list[StudyTask]): List of StudyTask objects.
     """
-    if not os.path.exists(DATA_FILE):
-        # Return default subjects on first run
+    path = _data_path(username)
+    if not os.path.exists(path):
+        # Fresh account — return default subjects
         return ["Python", "DBMS", "Linux", "DAA", "AIP"], []
 
-    with open(DATA_FILE, "r") as f:
+    with open(path, "r") as f:
         raw = json.load(f)
 
     subjects = raw.get("subjects", [])
@@ -62,11 +76,12 @@ def load_data() -> tuple:
     return subjects, tasks
 
 
-def save_data(subjects: list, tasks: list) -> None:
+def save_data(username: str, subjects: list, tasks: list) -> None:
     """
-    Save subjects and tasks to the JSON data file.
+    Save subjects and tasks to the user's JSON data file.
 
     Args:
+        username (str)            : The logged-in user's username.
         subjects (list[str])      : List of subject names.
         tasks    (list[StudyTask]): List of StudyTask objects.
     """
@@ -74,7 +89,7 @@ def save_data(subjects: list, tasks: list) -> None:
         "subjects": subjects,
         "tasks"   : [t.to_dict() for t in tasks],
     }
-    with open(DATA_FILE, "w") as f:
+    with open(_data_path(username), "w") as f:
         json.dump(raw, f, indent=4)
 
 
@@ -82,18 +97,22 @@ def save_data(subjects: list, tasks: list) -> None:
 #  Data Persistence — Settings                                         #
 # ================================================================== #
 
-def load_settings() -> dict:
+def load_settings(username: str) -> dict:
     """
-    Load app settings from settings.json.
+    Load app settings from the user's settings JSON file.
     Missing keys are filled from DEFAULT_SETTINGS.
+
+    Args:
+        username (str): The logged-in user's username.
 
     Returns:
         settings (dict): Dictionary of all setting values.
     """
-    if not os.path.exists(SETTINGS_FILE):
+    path = _settings_path(username)
+    if not os.path.exists(path):
         return DEFAULT_SETTINGS.copy()
 
-    with open(SETTINGS_FILE, "r") as f:
+    with open(path, "r") as f:
         saved = json.load(f)
 
     # Merge with defaults so new keys are always present
@@ -102,14 +121,15 @@ def load_settings() -> dict:
     return settings
 
 
-def save_settings(settings: dict) -> None:
+def save_settings(username: str, settings: dict) -> None:
     """
-    Save app settings to settings.json.
+    Save app settings to the user's settings JSON file.
 
     Args:
-        settings (dict): Dictionary of setting values to persist.
+        username (str)   : The logged-in user's username.
+        settings (dict)  : Dictionary of setting values to persist.
     """
-    with open(SETTINGS_FILE, "w") as f:
+    with open(_settings_path(username), "w") as f:
         json.dump(settings, f, indent=4)
 
 

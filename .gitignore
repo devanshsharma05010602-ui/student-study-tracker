@@ -2,6 +2,7 @@
 data.json
 settings.json
 users.json
+userdata/
 
 # Python
 __pycache__/

@@ -489,11 +489,18 @@ if not st.session_state.logged_in:
 #  From here onward the user IS authenticated                          #
 # ------------------------------------------------------------------ #
 
-if "subjects" not in st.session_state or "tasks" not in st.session_state:
-    st.session_state.subjects, st.session_state.tasks = load_data()
+# Each user gets their own isolated data — reload when a new user logs in
+_username = st.session_state.current_user.get("username", "")
 
-if "settings" not in st.session_state:
-    st.session_state.settings = load_settings()
+if "subjects" not in st.session_state or "tasks" not in st.session_state \
+        or st.session_state.get("_loaded_for") != _username:
+    st.session_state.subjects, st.session_state.tasks = load_data(_username)
+    st.session_state._loaded_for = _username
+
+if "settings" not in st.session_state \
+        or st.session_state.get("_settings_for") != _username:
+    st.session_state.settings = load_settings(_username)
+    st.session_state._settings_for = _username
 
 # ---- Convenience aliases ---- #
 subjects: list = st.session_state.subjects
@@ -506,13 +513,15 @@ cfg     : dict = st.session_state.settings   # settings shortcut
 # ================================================================== #
 
 def persist():
-    """Save task/subject data to disk."""
-    save_data(st.session_state.subjects, st.session_state.tasks)
+    """Save task/subject data to disk for the current user."""
+    uname = st.session_state.current_user.get("username", "")
+    save_data(uname, st.session_state.subjects, st.session_state.tasks)
 
 
 def persist_settings():
-    """Save settings to disk."""
-    save_settings(st.session_state.settings)
+    """Save settings to disk for the current user."""
+    uname = st.session_state.current_user.get("username", "")
+    save_settings(uname, st.session_state.settings)
 
 
 # ================================================================== #
@@ -525,24 +534,21 @@ semester     = cfg.get("semester", "Semester 1")
 
 name_html = (f"<span>{student_name}</span> · " if student_name else "")
 
-# ---- Logged-in user info + logout ---- #
-current_user   = st.session_state.current_user
-logged_in_name = current_user.get("full_name", current_user.get("username", "User"))
-
+# ---- Header with logout button ---- #
 hdr_col, logout_col = st.columns([6, 1])
 with hdr_col:
     st.markdown(f"""
     <div class="app-header">
       <h1>🎓 Student Study &amp; Progress Tracker</h1>
-      <p class="sub-info">
-          <span class="user-badge">👤 {logged_in_name}</span>
-          &nbsp;·&nbsp; {name_html}Manage subjects · Track topics · Monitor your progress
-      </p>
+      <p class="sub-info">{name_html}Manage subjects · Track topics · Monitor your progress</p>
     </div>
     """, unsafe_allow_html=True)
 with logout_col:
     st.markdown("<br><br>", unsafe_allow_html=True)
     if st.button("🚪 Logout", key="btn_logout", use_container_width=True):
+        # Clear all user-specific session data so the next login starts fresh
+        for _key in ["subjects", "tasks", "settings", "_loaded_for", "_settings_for"]:
+            st.session_state.pop(_key, None)
         st.session_state.logged_in    = False
         st.session_state.current_user = {}
         st.rerun()
