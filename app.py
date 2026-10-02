@@ -192,6 +192,25 @@ html, body, [class*="css"] { font-family: 'Inter', 'Segoe UI', sans-serif; }
 }
 .stButton > button:hover { background:linear-gradient(135deg,#6d28d9,#5b21b6); transform:translateY(-1px); color:white; }
 
+/* ---- Logout button override — small red pill ---- */
+[data-testid="stBaseButton-secondary"][kind="secondary"]:has-text("Logout"),
+div[data-testid="column"]:last-child .stButton > button {
+    background: rgba(239,68,68,0.1) !important;
+    border: 1px solid rgba(239,68,68,0.35) !important;
+    color: #f87171 !important;
+    border-radius: 999px !important;
+    padding: 0.25rem 0.9rem !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+div[data-testid="column"]:last-child .stButton > button:hover {
+    background: rgba(239,68,68,0.22) !important;
+    border-color: rgba(239,68,68,0.55) !important;
+    transform: none !important;
+    color: #fca5a5 !important;
+}
+
 /* ---- Progress bar ---- */
 .stProgress > div > div { background:rgba(138,92,246,0.15) !important; }
 .stProgress > div > div > div { background:linear-gradient(90deg,#7c3aed,#818cf8) !important; }
@@ -342,13 +361,50 @@ header[data-testid="stHeader"]      { display: none !important; }
     box-shadow: 0 0 0 3px rgba(138,92,246,0.12) !important;
 }
 
-/* ---- Logged-in user badge in header ---- */
-.user-badge {
+/* ---- Logout button (inline in header) ---- */
+.logout-btn {
     display: inline-flex; align-items: center; gap: 0.4rem;
-    background: rgba(138,92,246,0.18); border: 1px solid rgba(138,92,246,0.35);
-    color: #c4b5fd; font-size: 0.8rem; font-weight: 600;
-    padding: 0.28rem 0.85rem; border-radius: 999px;
-    vertical-align: middle;
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    color: #f87171; font-size: 0.78rem; font-weight: 600;
+    padding: 0.28rem 0.9rem; border-radius: 999px;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+    vertical-align: middle; float: right; margin-top: 0.15rem;
+}
+.logout-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); }
+
+/* ---- Landing page left banner ---- */
+.landing-banner {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    height: 100%; padding: 2rem 1.5rem 2rem 0;
+    min-height: 520px;
+}
+.landing-banner .lb-badge {
+    display: inline-block;
+    background: rgba(138,92,246,0.18); border: 1px solid rgba(138,92,246,0.4);
+    color: #c4b5fd; font-size: 0.72rem; font-weight: 700;
+    padding: 0.22rem 0.85rem; border-radius: 999px;
+    letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1.2rem;
+}
+.landing-banner h1 {
+    font-size: 2.6rem; font-weight: 900; line-height: 1.15;
+    margin: 0 0 1rem 0; letter-spacing: -1px;
+    background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 60%, #818cf8 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.landing-banner p {
+    color: #64748b; font-size: 0.95rem; line-height: 1.6;
+    margin: 0 0 2rem 0; max-width: 340px;
+}
+.landing-feature {
+    display: flex; align-items: center; gap: 0.7rem;
+    margin-bottom: 0.65rem; color: #94a3b8; font-size: 0.87rem;
+}
+.landing-feature .feat-icon {
+    font-size: 1.1rem;
+    background: rgba(138,92,246,0.15); border: 1px solid rgba(138,92,246,0.25);
+    border-radius: 8px; padding: 0.3rem 0.4rem; line-height: 1;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -373,7 +429,23 @@ if not st.session_state.logged_in:
     # ---- Auth page layout ---- #
     st.markdown('<div class="auth-wrapper">', unsafe_allow_html=True)
 
-    col_l, col_mid, col_r = st.columns([1, 2, 1])
+    col_l, col_mid, col_r = st.columns([1.2, 1.5, 0.3])
+
+    # ---- Left: Project name banner ---- #
+    with col_l:
+        st.markdown("""
+        <div class="landing-banner">
+            <span class="lb-badge">🎓 MCA Project</span>
+            <h1>Student Study &amp; Progress Tracker</h1>
+            <p>Organise your subjects, track study tasks and monitor your academic progress — all in one place.</p>
+            <div class="landing-feature"><span class="feat-icon">📂</span> Manage multiple subjects</div>
+            <div class="landing-feature"><span class="feat-icon">📝</span> Add &amp; track study tasks</div>
+            <div class="landing-feature"><span class="feat-icon">📊</span> Visualise your progress</div>
+            <div class="landing-feature"><span class="feat-icon">🔒</span> Your data, private to you</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ---- Centre: Login / Register card ---- #
     with col_mid:
         # --- Logo ---
         st.markdown("""
@@ -534,19 +606,18 @@ semester     = cfg.get("semester", "Semester 1")
 
 name_html = (f"<span>{student_name}</span> · " if student_name else "")
 
-# ---- Header with logout button ---- #
-hdr_col, logout_col = st.columns([6, 1])
-with hdr_col:
-    st.markdown(f"""
-    <div class="app-header">
-      <h1>🎓 Student Study &amp; Progress Tracker</h1>
-      <p class="sub-info">{name_html}Manage subjects · Track topics · Monitor your progress</p>
-    </div>
-    """, unsafe_allow_html=True)
-with logout_col:
-    st.markdown("<br><br>", unsafe_allow_html=True)
+# ---- Header with compact inline logout ---- #
+st.markdown(f"""
+<div class="app-header">
+  <h1>🎓 Student Study &amp; Progress Tracker</h1>
+  <p class="sub-info">{name_html}Manage subjects · Track topics · Monitor your progress</p>
+</div>
+""", unsafe_allow_html=True)
+
+# Compact logout button placed right-aligned below header
+_, logout_spacer = st.columns([9, 1])
+with logout_spacer:
     if st.button("🚪 Logout", key="btn_logout", use_container_width=True):
-        # Clear all user-specific session data so the next login starts fresh
         for _key in ["subjects", "tasks", "settings", "_loaded_for", "_settings_for"]:
             st.session_state.pop(_key, None)
         st.session_state.logged_in    = False
