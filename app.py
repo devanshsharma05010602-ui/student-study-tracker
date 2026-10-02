@@ -373,38 +373,32 @@ header[data-testid="stHeader"]      { display: none !important; }
 }
 .logout-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); }
 
-/* ---- Landing page left banner ---- */
+/* ---- Landing page top banner (above card) ---- */
 .landing-banner {
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: flex-start;
-    height: 100%; padding: 2rem 1.5rem 2rem 0;
-    min-height: 520px;
-}
-.landing-banner .lb-badge {
-    display: inline-block;
-    background: rgba(138,92,246,0.18); border: 1px solid rgba(138,92,246,0.4);
-    color: #c4b5fd; font-size: 0.72rem; font-weight: 700;
-    padding: 0.22rem 0.85rem; border-radius: 999px;
-    letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1.2rem;
+    text-align: center;
+    padding: 2.5rem 1rem 1.8rem;
+    max-width: 480px;
+    margin: 0 auto;
 }
 .landing-banner h1 {
-    font-size: 2.6rem; font-weight: 900; line-height: 1.15;
-    margin: 0 0 1rem 0; letter-spacing: -1px;
-    background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 60%, #818cf8 100%);
+    font-size: 2rem; font-weight: 900; line-height: 1.2;
+    margin: 0 0 0.7rem 0; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 55%, #818cf8 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-.landing-banner p {
-    color: #64748b; font-size: 0.95rem; line-height: 1.6;
-    margin: 0 0 2rem 0; max-width: 340px;
+.landing-banner .lb-desc {
+    color: #64748b; font-size: 0.9rem; line-height: 1.6;
+    margin: 0 0 1.4rem 0;
+}
+.landing-features {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 0.5rem 0.9rem; margin-bottom: 1.5rem;
 }
 .landing-feature {
-    display: flex; align-items: center; gap: 0.7rem;
-    margin-bottom: 0.65rem; color: #94a3b8; font-size: 0.87rem;
-}
-.landing-feature .feat-icon {
-    font-size: 1.1rem;
-    background: rgba(138,92,246,0.15); border: 1px solid rgba(138,92,246,0.25);
-    border-radius: 8px; padding: 0.3rem 0.4rem; line-height: 1;
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    color: #94a3b8; font-size: 0.82rem;
+    background: rgba(138,92,246,0.08); border: 1px solid rgba(138,92,246,0.18);
+    border-radius: 999px; padding: 0.22rem 0.75rem;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -426,45 +420,32 @@ if "auth_mode" not in st.session_state:
 # ================================================================== #
 
 if not st.session_state.logged_in:
-    # ---- Auth page layout ---- #
     st.markdown('<div class="auth-wrapper">', unsafe_allow_html=True)
 
-    col_l, col_mid, col_r = st.columns([1.2, 1.5, 0.3])
+    _, col_mid, _ = st.columns([1, 2, 1])
+    with col_mid:
 
-    # ---- Left: Project name banner ---- #
-    with col_l:
+        # ---- Project info banner (above the card) ---- #
         st.markdown("""
         <div class="landing-banner">
-            <span class="lb-badge">🎓 MCA Project</span>
-            <h1>Student Study &amp; Progress Tracker</h1>
-            <p>Organise your subjects, track study tasks and monitor your academic progress — all in one place.</p>
-            <div class="landing-feature"><span class="feat-icon">📂</span> Manage multiple subjects</div>
-            <div class="landing-feature"><span class="feat-icon">📝</span> Add &amp; track study tasks</div>
-            <div class="landing-feature"><span class="feat-icon">📊</span> Visualise your progress</div>
-            <div class="landing-feature"><span class="feat-icon">🔒</span> Your data, private to you</div>
+            <h1>🎓 Student Study &amp; Progress Tracker</h1>
+            <p class="lb-desc">Organise your subjects, track study tasks and monitor your academic progress — all in one place.</p>
+            <div class="landing-features">
+                <span class="landing-feature">📂 Manage multiple subjects</span>
+                <span class="landing-feature">📝 Add &amp; track study tasks</span>
+                <span class="landing-feature">📊 Visualise your progress</span>
+                <span class="landing-feature">🔒 Your data, private to you</span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
-    # ---- Centre: Login / Register card ---- #
-    with col_mid:
-        # --- Logo ---
-        st.markdown("""
-        <div class="auth-logo">
-            <span class="logo-icon">🎓</span>
-            <h2>Study & Progress Tracker</h2>
-            <p>Your personal academic companion</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # --- Mode toggle ---
+        # ---- Mode toggle ---- #
         tab_col1, tab_col2 = st.columns(2)
         with tab_col1:
-            login_active = "active" if st.session_state.auth_mode == "login" else ""
             if st.button("🔑  Sign In", use_container_width=True, key="btn_switch_login"):
                 st.session_state.auth_mode = "login"
                 st.rerun()
         with tab_col2:
-            reg_active = "active" if st.session_state.auth_mode == "register" else ""
             if st.button("✨  Register", use_container_width=True, key="btn_switch_register"):
                 st.session_state.auth_mode = "register"
                 st.rerun()
