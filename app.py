@@ -33,6 +33,7 @@ from functions import (
     export_tasks_csv, export_data_json,
     get_priority_summary,
 )
+from auth import register_user, login_user
 
 # ================================================================== #
 #  Page Configuration                                                  #
@@ -210,12 +211,283 @@ html, body, [class*="css"] { font-family: 'Inter', 'Segoe UI', sans-serif; }
 [data-testid="stToolbar"]           { display: none !important; }
 #MainMenu                           { display: none !important; }
 header[data-testid="stHeader"]      { display: none !important; }
+
+/* ================================================================ */
+/*  Login / Register Page Styles                                     */
+/* ================================================================ */
+
+/* Fullscreen auth wrapper */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 20% 50%, rgba(109,40,217,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.15) 0%, transparent 55%),
+                linear-gradient(135deg, #050510 0%, #0d0d1a 50%, #0a0a18 100%);
+    padding: 2rem 1rem;
+}
+
+/* Card */
+.auth-card {
+    background: linear-gradient(145deg, #13132a, #0f0f22);
+    border: 1px solid rgba(138,92,246,0.35);
+    border-radius: 24px;
+    padding: 2.8rem 3rem;
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(138,92,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+}
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(109,40,217,0.18) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Logo area */
+.auth-logo {
+    text-align: center;
+    margin-bottom: 1.8rem;
+}
+.auth-logo .logo-icon {
+    font-size: 3rem;
+    display: block;
+    filter: drop-shadow(0 0 20px rgba(138,92,246,0.6));
+    margin-bottom: 0.5rem;
+    animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+}
+.auth-logo h2 {
+    color: #ffffff;
+    font-size: 1.55rem;
+    font-weight: 800;
+    margin: 0 0 0.2rem 0;
+    letter-spacing: -0.4px;
+    background: linear-gradient(135deg, #c4b5fd, #a78bfa, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.auth-logo p {
+    color: #64748b;
+    font-size: 0.84rem;
+    margin: 0;
+}
+
+/* Tab switcher */
+.auth-tabs {
+    display: flex;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 1.6rem;
+    border: 1px solid rgba(138,92,246,0.15);
+}
+.auth-tab {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 0.87rem;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s;
+}
+.auth-tab.active {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(109,40,217,0.35);
+}
+
+/* Form labels */
+.auth-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+
+/* Auth messages */
+.auth-error   { background:rgba(239,68,68,0.1);  border:1px solid rgba(239,68,68,0.35);  border-radius:10px; padding:0.7rem 1rem; color:#f87171; font-size:0.86rem; margin-bottom:0.8rem; }
+.auth-success { background:rgba(34,197,94,0.1);  border:1px solid rgba(34,197,94,0.35);  border-radius:10px; padding:0.7rem 1rem; color:#4ade80; font-size:0.86rem; margin-bottom:0.8rem; }
+.auth-info    { background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.3);  border-radius:10px; padding:0.7rem 1rem; color:#93c5fd; font-size:0.86rem; margin-bottom:0.8rem; }
+
+/* Divider */
+.auth-divider { border:none; border-top:1px solid rgba(138,92,246,0.12); margin:1.2rem 0; }
+
+/* Streamlit input override (inside auth only) */
+.auth-card .stTextInput > div > div > input {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(138,92,246,0.25) !important;
+    border-radius: 10px !important;
+    color: #e2e8f0 !important;
+    font-size: 0.9rem !important;
+    padding: 0.55rem 0.9rem !important;
+    transition: border 0.2s !important;
+}
+.auth-card .stTextInput > div > div > input:focus {
+    border-color: rgba(138,92,246,0.6) !important;
+    box-shadow: 0 0 0 3px rgba(138,92,246,0.12) !important;
+}
+
+/* ---- Logged-in user badge in header ---- */
+.user-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: rgba(138,92,246,0.18); border: 1px solid rgba(138,92,246,0.35);
+    color: #c4b5fd; font-size: 0.8rem; font-weight: 600;
+    padding: 0.28rem 0.85rem; border-radius: 999px;
+    vertical-align: middle;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ================================================================== #
 #  Session State Initialisation                                        #
 # ================================================================== #
+
+# ---- Auth state ---- #
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in  = False
+if "current_user" not in st.session_state:
+    st.session_state.current_user = {}  # {username, full_name}
+if "auth_mode" not in st.session_state:
+    st.session_state.auth_mode  = "login"  # 'login' | 'register'
+
+# ================================================================== #
+#  Login / Register Gate                                               #
+# ================================================================== #
+
+if not st.session_state.logged_in:
+    # ---- Auth page layout ---- #
+    st.markdown('<div class="auth-wrapper">', unsafe_allow_html=True)
+
+    col_l, col_mid, col_r = st.columns([1, 2, 1])
+    with col_mid:
+        # --- Logo ---
+        st.markdown("""
+        <div class="auth-logo">
+            <span class="logo-icon">🎓</span>
+            <h2>Study & Progress Tracker</h2>
+            <p>Your personal academic companion</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # --- Mode toggle ---
+        tab_col1, tab_col2 = st.columns(2)
+        with tab_col1:
+            login_active = "active" if st.session_state.auth_mode == "login" else ""
+            if st.button("🔑  Sign In", use_container_width=True, key="btn_switch_login"):
+                st.session_state.auth_mode = "login"
+                st.rerun()
+        with tab_col2:
+            reg_active = "active" if st.session_state.auth_mode == "register" else ""
+            if st.button("✨  Register", use_container_width=True, key="btn_switch_register"):
+                st.session_state.auth_mode = "register"
+                st.rerun()
+
+        st.markdown('<hr class="auth-divider">', unsafe_allow_html=True)
+
+        # ============================================================ #
+        #  LOGIN FORM                                                    #
+        # ============================================================ #
+        if st.session_state.auth_mode == "login":
+            st.markdown('<p class="auth-label">Username</p>', unsafe_allow_html=True)
+            login_username = st.text_input(
+                "Username", placeholder="Enter your username",
+                label_visibility="collapsed", key="login_username"
+            )
+            st.markdown('<p class="auth-label">Password</p>', unsafe_allow_html=True)
+            login_password = st.text_input(
+                "Password", placeholder="Enter your password",
+                type="password", label_visibility="collapsed", key="login_password"
+            )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🚀  Sign In", use_container_width=True, key="btn_login"):
+                if login_username and login_password:
+                    ok, msg, user = login_user(login_username, login_password)
+                    if ok:
+                        st.session_state.logged_in    = True
+                        st.session_state.current_user = user
+                        st.rerun()
+                    else:
+                        st.markdown(f'<div class="auth-error">❌ {msg}</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<div class="auth-error">❌ Please fill in all fields.</div>', unsafe_allow_html=True)
+
+            st.markdown('<hr class="auth-divider">', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="auth-info">👋 New here? Click <strong>Register</strong> above to create an account.</div>',
+                unsafe_allow_html=True
+            )
+
+        # ============================================================ #
+        #  REGISTER FORM                                                 #
+        # ============================================================ #
+        else:
+            st.markdown('<p class="auth-label">Full Name</p>', unsafe_allow_html=True)
+            reg_fullname = st.text_input(
+                "Full Name", placeholder="e.g. Devan Sharma",
+                label_visibility="collapsed", key="reg_fullname"
+            )
+            st.markdown('<p class="auth-label">Username</p>', unsafe_allow_html=True)
+            reg_username = st.text_input(
+                "Username", placeholder="Choose a username (min 3 chars)",
+                label_visibility="collapsed", key="reg_username"
+            )
+            st.markdown('<p class="auth-label">Password</p>', unsafe_allow_html=True)
+            reg_password = st.text_input(
+                "Password", placeholder="Choose a password (min 6 chars)",
+                type="password", label_visibility="collapsed", key="reg_password"
+            )
+            st.markdown('<p class="auth-label">Confirm Password</p>', unsafe_allow_html=True)
+            reg_confirm = st.text_input(
+                "Confirm Password", placeholder="Re-enter your password",
+                type="password", label_visibility="collapsed", key="reg_confirm"
+            )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🎉  Create Account", use_container_width=True, key="btn_register"):
+                if not all([reg_fullname, reg_username, reg_password, reg_confirm]):
+                    st.markdown('<div class="auth-error">❌ Please fill in all fields.</div>', unsafe_allow_html=True)
+                elif reg_password != reg_confirm:
+                    st.markdown('<div class="auth-error">❌ Passwords do not match.</div>', unsafe_allow_html=True)
+                else:
+                    ok, msg = register_user(reg_username, reg_password, reg_fullname)
+                    if ok:
+                        st.markdown(
+                            '<div class="auth-success">✅ Account created! You can now sign in.</div>',
+                            unsafe_allow_html=True
+                        )
+                        st.session_state.auth_mode = "login"
+                        st.rerun()
+                    else:
+                        st.markdown(f'<div class="auth-error">❌ {msg}</div>', unsafe_allow_html=True)
+
+            st.markdown('<hr class="auth-divider">', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="auth-info">🔑 Already have an account? Click <strong>Sign In</strong> above.</div>',
+                unsafe_allow_html=True
+            )
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.stop()   # ← Stop rendering anything below until logged in
+
+# ------------------------------------------------------------------ #
+#  From here onward the user IS authenticated                          #
+# ------------------------------------------------------------------ #
 
 if "subjects" not in st.session_state or "tasks" not in st.session_state:
     st.session_state.subjects, st.session_state.tasks = load_data()
@@ -253,12 +525,27 @@ semester     = cfg.get("semester", "Semester 1")
 
 name_html = (f"<span>{student_name}</span> · " if student_name else "")
 
-st.markdown(f"""
-<div class="app-header">
-  <h1>🎓 Student Study &amp; Progress Tracker</h1>
-  <p class="sub-info">{name_html}Manage subjects · Track topics · Monitor your progress</p>
-</div>
-""", unsafe_allow_html=True)
+# ---- Logged-in user info + logout ---- #
+current_user   = st.session_state.current_user
+logged_in_name = current_user.get("full_name", current_user.get("username", "User"))
+
+hdr_col, logout_col = st.columns([6, 1])
+with hdr_col:
+    st.markdown(f"""
+    <div class="app-header">
+      <h1>🎓 Student Study &amp; Progress Tracker</h1>
+      <p class="sub-info">
+          <span class="user-badge">👤 {logged_in_name}</span>
+          &nbsp;·&nbsp; {name_html}Manage subjects · Track topics · Monitor your progress
+      </p>
+    </div>
+    """, unsafe_allow_html=True)
+with logout_col:
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    if st.button("🚪 Logout", key="btn_logout", use_container_width=True):
+        st.session_state.logged_in    = False
+        st.session_state.current_user = {}
+        st.rerun()
 
 # ================================================================== #
 #  Navigation Tabs                                                     #

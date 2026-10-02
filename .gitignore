@@ -1,6 +1,7 @@
 # User data files (generated at runtime — do not commit)
 data.json
 settings.json
+users.json
 
 # Python
 __pycache__/
