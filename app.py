@@ -361,44 +361,13 @@ header[data-testid="stHeader"]      { display: none !important; }
     box-shadow: 0 0 0 3px rgba(138,92,246,0.12) !important;
 }
 
-/* ---- Logout button (inline in header) ---- */
-.logout-btn {
+/* ---- Logged-in user badge in header ---- */
+.user-badge {
     display: inline-flex; align-items: center; gap: 0.4rem;
-    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
-    color: #f87171; font-size: 0.78rem; font-weight: 600;
-    padding: 0.28rem 0.9rem; border-radius: 999px;
-    cursor: pointer; text-decoration: none;
-    transition: background 0.2s, border-color 0.2s;
-    vertical-align: middle; float: right; margin-top: 0.15rem;
-}
-.logout-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); }
-
-/* ---- Landing page top banner (above card) ---- */
-.landing-banner {
-    text-align: center;
-    padding: 2.5rem 1rem 1.8rem;
-    max-width: 480px;
-    margin: 0 auto;
-}
-.landing-banner h1 {
-    font-size: 2rem; font-weight: 900; line-height: 1.2;
-    margin: 0 0 0.7rem 0; letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 55%, #818cf8 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.landing-banner .lb-desc {
-    color: #64748b; font-size: 0.9rem; line-height: 1.6;
-    margin: 0 0 1.4rem 0;
-}
-.landing-features {
-    display: flex; flex-wrap: wrap; justify-content: center;
-    gap: 0.5rem 0.9rem; margin-bottom: 1.5rem;
-}
-.landing-feature {
-    display: inline-flex; align-items: center; gap: 0.45rem;
-    color: #94a3b8; font-size: 0.82rem;
-    background: rgba(138,92,246,0.08); border: 1px solid rgba(138,92,246,0.18);
-    border-radius: 999px; padding: 0.22rem 0.75rem;
+    background: rgba(138,92,246,0.18); border: 1px solid rgba(138,92,246,0.35);
+    color: #c4b5fd; font-size: 0.8rem; font-weight: 600;
+    padding: 0.28rem 0.85rem; border-radius: 999px;
+    vertical-align: middle;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -420,26 +389,21 @@ if "auth_mode" not in st.session_state:
 # ================================================================== #
 
 if not st.session_state.logged_in:
+    # ---- Auth page layout ---- #
     st.markdown('<div class="auth-wrapper">', unsafe_allow_html=True)
 
-    _, col_mid, _ = st.columns([1, 2, 1])
+    col_l, col_mid, col_r = st.columns([1, 2, 1])
     with col_mid:
-
-        # ---- Project info banner (above the card) ---- #
+        # --- Logo ---
         st.markdown("""
-        <div class="landing-banner">
-            <h1>🎓 Student Study &amp; Progress Tracker</h1>
-            <p class="lb-desc">Organise your subjects, track study tasks and monitor your academic progress — all in one place.</p>
-            <div class="landing-features">
-                <span class="landing-feature">📂 Manage multiple subjects</span>
-                <span class="landing-feature">📝 Add &amp; track study tasks</span>
-                <span class="landing-feature">📊 Visualise your progress</span>
-                <span class="landing-feature">🔒 Your data, private to you</span>
-            </div>
+        <div class="auth-logo">
+            <span class="logo-icon">🎓</span>
+            <h2>Study &amp; Progress Tracker</h2>
+            <p>Your personal academic companion</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # ---- Mode toggle ---- #
+        # --- Mode toggle ---
         tab_col1, tab_col2 = st.columns(2)
         with tab_col1:
             if st.button("🔑  Sign In", use_container_width=True, key="btn_switch_login"):

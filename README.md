@@ -27,7 +27,7 @@ Help students:
 | **Search** | Search tasks by topic keyword |
 | **Filter** | Filter tasks by subject or status |
 | **Progress Charts** | Bar chart (per subject) + Pie chart (overall) |
-| **Data Persistence** | Data saved to `data.json` — survives page refreshes |
+| **Data Persistence** | Relational data saved to SQLite database (`tracker.db`) — survives page refreshes and restarts |
 
 ---
 
@@ -37,9 +37,9 @@ Help students:
 |---|---|
 | **Python 3.x** | Main programming language |
 | **Streamlit** | Web interface |
+| **SQLite3** | Relational database & data persistence |
 | **Pandas** | DataFrame display |
 | **Matplotlib** | Progress charts |
-| **JSON** | Data storage |
 
 ---
 

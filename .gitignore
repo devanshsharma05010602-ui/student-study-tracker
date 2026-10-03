@@ -3,6 +3,8 @@ data.json
 settings.json
 users.json
 userdata/
+*.db
+tracker.db
 
 # Python
 __pycache__/

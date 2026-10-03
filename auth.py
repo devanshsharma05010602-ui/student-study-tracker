@@ -2,40 +2,19 @@
 auth.py
 -------
 Authentication helpers for the Student Study & Progress Tracker.
-Handles user registration, login, and session management.
-
-Credentials are stored in users.json (plain JSON — no external deps).
-Each entry: { "username": "...", "password": "...", "full_name": "..." }
+Handles user registration, login, and session validation backed by SQLite.
 """
 
-import json
-import os
 import hashlib
+from database import init_db, get_user_by_username, create_user
 
-USERS_FILE = "users.json"
+# Ensure database and tables are created on start
+init_db()
 
-
-# ================================================================== #
-#  Internal helpers                                                    #
-# ================================================================== #
 
 def _hash_password(password: str) -> str:
     """Return a SHA-256 hex digest of the given password."""
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
-
-def _load_users() -> list:
-    """Load all registered users from the JSON file."""
-    if not os.path.exists(USERS_FILE):
-        return []
-    with open(USERS_FILE, "r") as f:
-        return json.load(f)
-
-
-def _save_users(users: list) -> None:
-    """Persist the user list to disk."""
-    with open(USERS_FILE, "w") as f:
-        json.dump(users, f, indent=4)
 
 
 # ================================================================== #
@@ -44,19 +23,18 @@ def _save_users(users: list) -> None:
 
 def user_exists(username: str) -> bool:
     """Return True if a user with the given username already exists."""
-    users = _load_users()
-    return any(u["username"].lower() == username.lower() for u in users)
+    return get_user_by_username(username) is not None
 
 
-def register_user(username: str, password: str, full_name: str) -> tuple:
+def register_user(username: str, password: str, full_name: str) -> tuple[bool, str]:
     """
-    Register a new user.
+    Register a new user in SQLite.
 
     Returns:
         (True, "")          on success.
         (False, error_msg)  on failure.
     """
-    username = username.strip()
+    username  = username.strip()
     full_name = full_name.strip()
 
     if not username:
@@ -72,31 +50,33 @@ def register_user(username: str, password: str, full_name: str) -> tuple:
     if user_exists(username):
         return False, f"Username '{username}' is already taken."
 
-    users = _load_users()
-    users.append({
-        "username" : username,
-        "password" : _hash_password(password),
-        "full_name": full_name,
-    })
-    _save_users(users)
-    return True, ""
+    try:
+        create_user(username, _hash_password(password), full_name)
+        return True, ""
+    except Exception as e:
+        return False, f"Registration failed: {e}"
 
 
-def login_user(username: str, password: str) -> tuple:
+def login_user(username: str, password: str) -> tuple[bool, str, dict]:
     """
-    Validate credentials.
+    Validate credentials against SQLite.
 
     Returns:
         (True,  "",          user_dict)  on success.
         (False, error_msg,   {})         on failure.
     """
     username = username.strip()
-    users    = _load_users()
+    user     = get_user_by_username(username)
 
-    for u in users:
-        if u["username"].lower() == username.lower():
-            if u["password"] == _hash_password(password):
-                return True, "", u
-            return False, "Incorrect password.", {}
+    if not user:
+        return False, "No account found with that username.", {}
 
-    return False, "No account found with that username.", {}
+    if user["password"] == _hash_password(password):
+        # Return clean user dictionary without password
+        return True, "", {
+            "id"       : user["id"],
+            "username" : user["username"],
+            "full_name": user["full_name"],
+        }
+
+    return False, "Incorrect password.", {}
