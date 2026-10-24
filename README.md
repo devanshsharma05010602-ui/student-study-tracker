@@ -27,7 +27,7 @@ Help students:
 | **Search** | Search tasks by topic keyword |
 | **Filter** | Filter tasks by subject or status |
 | **Progress Charts** | Bar chart (per subject) + Pie chart (overall) |
-| **Data Persistence** | Relational data saved to SQLite database (`tracker.db`) — survives page refreshes and restarts |
+| **Data Persistence** | Relational data saved to MySQL database (`student_tracker`) — survives page refreshes and restarts |
 
 ---
 
@@ -37,7 +37,7 @@ Help students:
 |---|---|
 | **Python 3.x** | Main programming language |
 | **Streamlit** | Web interface |
-| **SQLite3** | Relational database & data persistence |
+| **MySQL** | Relational database & data persistence (via `mysql-connector-python`) |
 | **Pandas** | DataFrame display |
 | **Matplotlib** | Progress charts |
 
@@ -66,6 +66,15 @@ venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 ```
 
+### 4. Configure Database
+
+Copy `db_config.example.py` to `db_config.py` and set your MySQL password:
+
+```bash
+cp db_config.example.py db_config.py   # On Linux/macOS
+copy db_config.example.py db_config.py # On Windows
+```
+
 ---
 
 ## ▶️ How to Run
@@ -83,12 +92,14 @@ The application will open automatically in your default web browser at `http://l
 ```
 Student_Study_Tracker/
 │
-├── app.py           ← Main Streamlit application (UI + navigation)
-├── models.py        ← StudyTask class (OOP)
-├── functions.py     ← All business logic functions
-├── data.json        ← Auto-created; stores subjects and tasks
-├── requirements.txt ← Python package dependencies
-└── README.md        ← This file
+├── app.py                ← Main Streamlit application (UI + navigation)
+├── db_config.example.py  ← Database configuration template
+├── database.py           ← MySQL queries, tables, and connection management
+├── models.py             ← StudyTask class (OOP)
+├── functions.py          ← All business logic functions
+├── auth.py               ← User authentication and password hashing
+├── requirements.txt      ← Python package dependencies
+└── README.md             ← This file
 ```
 
 ---

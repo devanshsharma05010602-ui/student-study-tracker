@@ -10,6 +10,17 @@ tracker.db
 __pycache__/
 *.pyc
 *.pyo
+# Credentials & Environment
+db_config.py
 .env
+
+# Virtual Environment
 venv/
 .venv/
+env/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
